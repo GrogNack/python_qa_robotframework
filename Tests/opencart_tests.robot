@@ -12,7 +12,7 @@ ${ADMIN_URL}    ${BASE_URL}/admin/
 ${LOGIN}    user
 ${PWD}    bitnami
 ${PRODUCT_NAME}    Product 8
-
+@{TEST_PRODUCT}    test_good    test_good_tag    test_good_model
 
 *** Test Cases ***
 Check main page
@@ -35,48 +35,37 @@ Test add goods
     Go To    ${ADMIN_URL}
     Authorization    ${LOGIN}    ${PWD}
     Move To Catalog
-    ${GOODS_COUNT}    Get Text    css=div.row>div.text-right
-    @{INFO_STRING_BEFORE} =    Split String    ${GOODS_COUNT}    ${SPACE}
-    ${OLD}    Convert To Integer    ${INFO_STRING_BEFORE}[5]
+    ${OLD}    Get Number Of Goods
     ${OLD}    Evaluate    ${OLD} + 1
     Click Element    css=a[data-original-title="Add New"]
-    Input Text    css=#input-name1    test_good
-    Input Text    css=#input-meta-title1    test_good_tag
+    Input Text    css=#input-name1    ${TEST_PRODUCT}[0]
+    Input Text    css=#input-meta-title1    ${TEST_PRODUCT}[1]
     Click Element    css=[href="#tab-data"]
-    Input Text    css=[name="model"]    test_good_model
+    Input Text    css=[name="model"]    ${TEST_PRODUCT}[2]
     Click Element    css=.fa-save
-    ${GOODS_COUNT}    Get Text    css=div.row>div.text-right
-    @{INFO_STRING_AFTER} =    Split String    ${GOODS_COUNT}    ${SPACE}
-    ${NEW}    Convert To Integer    ${INFO_STRING_AFTER}[5]
+    ${NEW}    Get Number Of Goods
     Should Be Equal As Integers    ${NEW}    ${OLD}
 
 Test delete goods
     Go To    ${ADMIN_URL}
     Authorization    ${LOGIN}    ${PWD}
     Move To Catalog
-    Input Text    css=[name="filter_name"]    test_good
-    Click Button    css=#button-filter
-    ${GOODS_COUNT}    Get Text    css=div.row>div.text-right
-    @{INFO_STRING_BEFORE} =    Split String    ${GOODS_COUNT}    ${SPACE}
-    ${OLD}    Convert To Integer    ${INFO_STRING_BEFORE}[5]
+    Filter    ${TEST_PRODUCT}[0]
+    ${OLD}    Get Number Of Goods
     ${OLD}    Evaluate    ${OLD} - 1
     Click Element    css=tr:nth-child(2)>td>input[type="checkbox"]
     Click Element    css=[data-original-title="Delete"]
     Handle Alert
-    ${GOODS_COUNT}    Get Text    css=div.row>div.text-right
-    @{INFO_STRING_BEFORE} =    Split String    ${GOODS_COUNT}    ${SPACE}
-    ${NEW}    Convert To Integer    ${INFO_STRING_BEFORE}[5]
+    ${NEW}    Get Number Of Goods
     Should Be Equal As Integers    ${NEW}    ${OLD}
 
 Test filter list of products
     Go To    ${ADMIN_URL}
     Authorization    ${LOGIN}    ${PWD}
     Move To Catalog
-    Input Text    css=[name="filter_name"]    ${PRODUCT_NAME}
-    Click Button    css=#button-filter
+    Filter    ${PRODUCT_NAME}
     ${GOODS_COUNT}    Get Text    css=div.row>div.text-right
-    @{INFO_STRING} =    Split String    ${GOODS_COUNT}    ${SPACE}
-    ${COUNT}    Convert To Integer    ${INFO_STRING}[5]
+    ${COUNT}    Get Number Of Goods
     should be equal as integers    ${COUNT}    1
 
 
@@ -94,3 +83,13 @@ Move To Catalog
     Click Element    css=#menu-catalog
     Sleep    30ms
     Click Element    css=#menu-catalog>ul>li:nth-child(2)
+
+Get Number Of Goods
+    ${GOODS_COUNT}    Get Text    css=div.row>div.text-right
+    @{INFO_STRING_BEFORE} =    Split String    ${GOODS_COUNT}    ${SPACE}
+    ${COUNT}    Convert To Integer    ${INFO_STRING_BEFORE}[5]
+    [Return]    ${COUNT}
+
+Filter    [Arguments]    ${NAME}
+    Input Text    css=[name="filter_name"]    ${NAME}
+    Click Button    css=#button-filter
